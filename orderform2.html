@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatch System</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dispatch App">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0a0f1e;
+  --navy-2: #0f172a;
+  --navy-3: #1e293b;
+  --navy-4: #2d3f55;
+  --amber: #f59e0b;
+  --amber-soft: rgba(245,158,11,0.12);
+  --amber-glow: rgba(245,158,11,0.2);
+  --blue: #3b82f6;
+  --blue-soft: rgba(59,130,246,0.1);
+  --green: #10b981;
+  --green-soft: rgba(16,185,129,0.1);
+  --green-dim: #059669;
+  --red: #ef4444;
+  --red-soft: rgba(239,68,68,0.1);
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #f1f5f9;
+  --border: #e2e8f0;
+  --border-2: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #334155;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+  --r: 10px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.07);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,0.14);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── PASSWORD GATE ──────────────────────────────────── */
+#gate {
+  position: fixed;
+  inset: 0;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: var(--sans);
+}
+.gate-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.gate-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.gate-logo-icon {
+  width: 52px;
+  height: 52px;
+  background: var(--amber);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gate-logo-text { color: #fff; }
+.gate-logo-text h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+.gate-logo-text p { font-size: 12px; color: var(--text-4); margin-top: 3px; letter-spacing: 1px; text-transform: uppercase; }
+.gate-card {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r-xl);
+  padding: 32px;
+  backdrop-filter: blur(12px);
+}
+.gate-card h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.gate-card p {
+  font-size: 13px;
+  color: var(--text-4);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.gate-input-wrap { position: relative; margin-bottom: 16px; }
+.gate-input {
+  width: 100%;
+  padding: 14px 48px 14px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: var(--r);
+  font-size: 15px;
+  color: #0b0303;
+  font-family: var(--mono);
+  letter-spacing: 3px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.gate-input::placeholder { color: rgba(255,255,255,0.2); letter-spacing: 1px; font-family: var(--sans); }
+.gate-input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 4px var(--amber-glow);
+}
+.gate-input.wrong {
+  border-color: var(--red);
+  box-shadow: 0 0 0 4px rgba(239,68,68,0.2);
+  animation: shake 0.4s ease;
+}
+.gate-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-4);
+  padding: 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+.gate-eye:hover { color: var(--amber); }
+.gate-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--amber);
+  color: var(--navy);
+  border: none;
+  border-radius: var(--r);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: var(--sans);
+  letter-spacing: 0.3px;
+  transition: background 0.2s, transform 0.1s;
+}
+.gate-btn:hover { background: #fbbf24; }
+.gate-btn:active { transform: scale(0.98); }
+.gate-error {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fca5a5;
+  font-weight: 500;
+}
+.gate-error.show { display: flex; }
+.gate-attempts {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-4);
+  text-align: center;
+}
+.gate-locked {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 0;
+}
+.gate-locked.show { display: flex; }
+.gate-locked svg { color: var(--red); margin-bottom: 14px; }
+.gate-locked h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.gate-locked p { font-size: 13px; color: var(--text-4); line-height: 1.5; }
+.gate-locked .timer {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--red);
+  margin: 16px 0 8px;
+}
+
+/* ─── MAIN APP (hidden until auth) ──────────────────── */
+#app { display: none; font-family: var(--sans); background: #f0f4f8; min-height: 100vh; flex-direction: column; color: var(--text); }
+#app.visible { display: flex; animation: fadeInApp 0.5s ease; }
+
+/* ─── TOPBAR ─────────────────────────────────────────── */
+.topbar {
+  background: var(--navy-2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 62px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.5px;
+}
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--amber);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-version {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  background: rgba(245,158,11,0.15);
+  color: var(--amber);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(245,158,11,0.3);
+}
+.topbar-stats { display: flex; gap: 32px; align-items: center; }
+.t-stat { text-align: center; }
+.t-stat .v {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--amber);
+  line-height: 1;
+}
+.t-stat .l { font-size: 10px; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.t-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.07); }
+
+.sheets-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-4);
+  padding: 7px 13px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+.sheets-pill .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #475569;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.sheets-pill:hover { border-color: rgba(255,255,255,0.16); }
+.sheets-pill.connected { color: var(--green); border-color: rgba(16,185,129,0.3); }
+.sheets-pill.connected .dot { background: var(--green); box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+.sheets-pill.syncing .dot { background: var(--amber); animation: blink 0.7s infinite; }
+.sheets-pill.error { color: var(--red); border-color: rgba(239,68,68,0.3); }
+.sheets-pill.error .dot { background: var(--red); }
+
+/* ─── LAYOUT ─────────────────────────────────────────── */
+.layout {
+  display: flex;
+  flex: 1;
+  gap: 22px;
+  padding: 24px 28px 48px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  align-items: flex-start;
+}
+.left-panel { width: 430px; flex-shrink: 0; display: flex; flex-direction: column; gap: 18px; }
+.right-panel { flex: 1; min-width: 0; }
+
+/* ─── CARD ───────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+.card-header {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+}
+.card-header-left { display: flex; align-items: center; gap: 11px; }
+.card-header-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.card-header-icon.amber { background: var(--amber-soft); }
+.card-header-icon.green { background: var(--green-soft); }
+.card-header-icon.blue  { background: var(--blue-soft); }
+.ch-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.ch-sub { font-size: 11px; color: var(--text-4); margin-top: 1px; font-family: var(--mono); }
+.card-body { padding: 22px; }
+
+/* ─── SHEETS SETUP ───────────────────────────────────── */
+.setup-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 2px dashed var(--border-2);
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+.setup-card.connected {
+  border: 2px solid rgba(16,185,129,0.35);
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.06), var(--shadow);
+}
+.setup-steps { display: flex; flex-direction: column; }
+.step {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--navy-2);
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.3s;
+}
+.step-num.done { background: var(--green); color: #fff; font-size: 14px; }
+.step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.step-desc { font-size: 12px; color: var(--text-3); line-height: 1.55; }
+.step-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: var(--navy-2);
+  color: var(--amber);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.step-link:hover { background: var(--navy-3); }
+.step-link svg { flex-shrink: 0; }
+.step-input-row { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; }
+.step-input {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 0;
+  outline: none;
+}
+.step-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-glow); }
+.step-input::placeholder { color: var(--text-4); font-family: var(--sans); font-size: 11px; }
+.step-input.valid { border-color: var(--green); }
+.step-input.invalid { border-color: var(--red); }
+.connect-btn {
+  padding: 10px 16px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, opacity 0.2s;
+  font-family: var(--sans);
+}
+.connect-btn:hover:not(:disabled) { background: var(--green-dim); }
+.connect-btn:disabled { opacity: 0.4; cursor: default; }
+.connected-badge {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 13px;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 600;
+}
+.connected-badge.show { display: flex; }
+.disc-btn {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--red);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--sans);
+}
+.disc-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* ─── FORM ───────────────────────────────────────────── */
+.sec-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-4);
+  margin: 20px 0 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-label::before { content:''; width:3px; height:12px; background:var(--amber); border-radius:2px; flex-shrink:0; }
+.sec-label:first-child { margin-top: 0; }
+.fg { margin-bottom: 12px; }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
+input[type="text"], input[type="number"], input[type="tel"], select {
+  width: 100%;
+  padding: 10px 25px ;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: var(--sans);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  appearance: auto;
+  outline: none;
+}
+input::placeholder { color: var(--text-4); }
+input:focus, select:focus {
+  border-color: var(--amber);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--amber-glow);
+}
+input:hover:not(:focus), select:hover:not(:focus) { border-color: var(--border-2); }
+.row { display: flex; gap: 10px; }
+.row-3 { display: flex; gap: 10px; }
+.row .fg, .row-3 .fg { flex: 1; margin-bottom: 10px; }
+
+/* ─── SUMMARY ────────────────────────────────────────── */
+.summary-box {
+  background: var(--navy-2);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin: 18px 0;
+}
+.s-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #64748b; padding: 3px 0; }
+.s-row .sv { font-family: var(--mono); color: #cbd5e1; font-weight: 600; }
+.s-div { border: none; border-top: 1px dashed #1e293b; margin: 10px 0; }
+.cod-row { display: flex; justify-content: space-between; align-items: center; padding-top: 2px; }
+.cod-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber); }
+.cod-val { font-family: var(--mono); font-size: 24px; font-weight: 600; color: var(--amber); }
+
+/* ─── SUBMIT BTN ─────────────────────────────────────── */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--sans);
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+}
+.submit-btn:hover { background: var(--green-dim); box-shadow: 0 6px 20px rgba(16,185,129,0.45); transform: translateY(-1px); }
+.submit-btn:active { transform: translateY(0); }
+
+/* ─── ORDERS ─────────────────────────────────────────── */
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.search-wrap { position: relative; flex: 1; min-width: 160px; }
+.search-wrap .s-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-4); pointer-events: none; }
+.search-inp {
+  width: 100%;
+  padding: 10px 13px 10px 34px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-inp:focus { border-color: var(--amber); }
+.filter-sel {
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: var(--sans);
+  min-width: 130px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.filter-sel:focus { border-color: var(--amber); }
+.clear-all {
+  padding: 10px 14px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--sans);
+  white-space: nowrap;
+}
+.clear-all:hover { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+/* ─── ORDER CARD ─────────────────────────────────────── */
+.oc {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+}
+.oc:hover { border-color: var(--border-2); box-shadow: 0 6px 24px rgba(0,0,0,0.07); transform: translateY(-1px); }
+.oc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.oc-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--navy-2);
+  color: #64748b;
+  padding: 4px 9px;
+  border-radius: 5px;
+}
+.oc-meta { display: flex; align-items: center; gap: 8px; }
+.oc-date { font-size: 11px; color: var(--text-4); font-family: var(--mono); }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-4); transition: background 0.3s; }
+.sync-dot.synced { background: var(--green); }
+.sync-dot.failed { background: var(--red); }
+.sbadge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  transition: all 0.2s;
+}
+.sbadge.pending    { background: var(--amber-soft); color: #b45309; border-color: rgba(245,158,11,0.25); }
+.sbadge.dispatched { background: var(--blue-soft);  color: #1d4ed8; border-color: rgba(59,130,246,0.25); }
+.sbadge.delivered  { background: var(--green-soft); color: #065f46; border-color: rgba(16,185,129,0.25); }
+.sbadge:hover { opacity: 0.75; }
+
+.oc-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  padding: 14px 16px;
+}
+.of { display: flex; flex-direction: column; gap: 2px; }
+.of.full { grid-column: 1/-1; }
+.of-l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-4); font-weight: 600; }
+.of-v { font-size: 13px; color: var(--text-2); font-weight: 500; }
+
+.oc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--navy-2);
+}
+.cod-tag { display: flex; align-items: baseline; gap: 8px; }
+.cod-tag .cl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; }
+.cod-tag .cv { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--amber); }
+.oc-actions { display: flex; gap: 7px; align-items: center; }
+.abtn {
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  font-family: var(--sans);
+}
+.a-wa   { background: #22c55e; color: #fff; }
+.a-wa:hover   { background: #16a34a; }
+.a-print{ background: rgba(255,255,255,0.06); color: #94a3b8; }
+.a-print:hover{ background: rgba(255,255,255,0.12); color: #e2e8f0; }
+.a-del  { background: rgba(239,68,68,0.1); color: var(--red); }
+.a-del:hover  { background: var(--red); color: #fff; }
+
+/* ─── EMPTY STATE ────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px;
+  color: var(--text-4);
+  text-align: center;
+}
+.empty-icon {
+  width: 64px; height: 64px;
+  border-radius: 18px;
+  background: var(--surface-3);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.empty h3 { font-size: 15px; font-weight: 600; color: var(--text-3); margin-bottom: 6px; }
+.empty p { font-size: 13px; }
+
+/* ─── SLIP MODAL ─────────────────────────────────────── */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(10,15,30,0.75);
+  z-index: 500;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-bg.open { display: flex; animation: fadeInBg 0.2s ease; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 28px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  position: relative;
+  animation: slideUp 0.25s ease;
+}
+.modal-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.slip {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.75;
+  background: var(--navy-2);
+  color: #94a3b8;
+  border-radius: 10px;
+  padding: 16px;
+  white-space: pre-wrap;
+}
+.slip .slip-hl { color: var(--amber); font-weight: 600; }
+.modal-acts { display: flex; gap: 8px; margin-top: 14px; }
+.modal-btn {
+  flex: 1; padding: 11px;
+  border-radius: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; transition: background 0.2s;
+  font-family: var(--sans);
+}
+.mb-primary { background: var(--navy-2); color: #fff; }
+.mb-primary:hover { background: var(--navy-3); }
+.mb-sec { background: var(--surface-3); color: var(--text-2); }
+.mb-sec:hover { background: var(--border); }
+.modal-x {
+  position: absolute; top: 16px; right: 16px;
+  width: 28px; height: 28px;
+  background: var(--surface-3); border: none;
+  border-radius: 6px; cursor: pointer;
+  color: var(--text-3); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.modal-x:hover { background: var(--red); color: #fff; }
+
+/* ─── TOAST ──────────────────────────────────────────── */
+.toast-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; pointer-events: none; }
+.toast {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  font-family: var(--sans);
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+  max-width: 280px;
+}
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+.toast.info    { background: #6366f1; }
+.toast.warn    { background: var(--amber); color: var(--navy); }
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-4);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--sans);
+}
+footer strong { color: var(--amber); }
+
+/* ─── KEYFRAMES ──────────────────────────────────────── */
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes fadeInApp { from{opacity:0} to{opacity:1} }
+@keyframes fadeInBg { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn { from{transform:translateX(24px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes fadeOut { to{opacity:0;transform:translateY(6px)} }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; padding: 14px 14px 48px; }
+  .left-panel { width: 100%; }
+  .topbar-stats { display: none; }
+  .topbar { padding: 0 16px; }
+}
+@media print {
+  body > *:not(.modal-bg) { display: none !important; }
+  .modal-bg { display: flex !important; position: static; background: none; backdrop-filter: none; }
+  .modal { box-shadow: none; border: none; padding: 0; }
+  .modal-acts, .modal-x, .modal-title { display: none; }
+  .slip { background: none; color: #000; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── PASSWORD GATE ──────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <div class="gate-logo-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0a0f1e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 8a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2M5 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <div class="gate-logo-text">
+        <h1>Dispatch App</h1>
+        <p>Secure Access</p>
+      </div>
+    </div>
+    <div class="gate-card" id="gateCard">
+      <!-- normal login -->
+      <div id="loginForm">
+        <h2>Enter Password</h2>
+        <p>This system is restricted. Please enter your access password to continue.</p>
+        <div class="gate-input-wrap">
+          <input class="gate-input" type="password" id="pwInput" placeholder="Enter password…" autocomplete="off" onkeydown="if(event.key==='Enter')tryLogin()">
+          <button class="gate-eye" id="eyeBtn" onclick="toggleEye()" title="Show/hide password">
+            <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <button class="gate-btn" onclick="tryLogin()">Unlock Access →</button>
+        <div class="gate-error" id="gateError">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="gateErrorMsg">Incorrect password. Please try again.</span>
+        </div>
+        <p class="gate-attempts" id="attemptsText"></p>
+      </div>
+      <!-- locked state -->
+      <div class="gate-locked" id="lockedView">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <h3>Too Many Attempts</h3>
+        <p>Access has been temporarily locked for security.<br>Please wait before trying again.</p>
+        <div class="timer" id="lockTimer">0:30</div>
+        <p style="font-size:12px;color:#475569">Locked until timer expires</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ────────────────────────────────────────── -->
+<div id="app">
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a0f1e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 8a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2M5 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      Dispatch App
+      <span class="brand-version">v2.0</span>
+    </div>
+    <div class="topbar-stats">
+      <div class="t-stat"><div class="v" id="statTotal">0</div><div class="l">Orders</div></div>
+      <div class="t-divider"></div>
+      <div class="t-stat"><div class="v" id="statPending">0</div><div class="l">Pending</div></div>
+      <div class="t-divider"></div>
+      <div class="t-stat"><div class="v" id="statCOD">₹0</div><div class="l">Total COD</div></div>
+    </div>
+    <div class="sheets-pill" id="sheetsPill">
+      <span class="dot"></span>
+      <span id="pillTxt">Sheets: Off</span>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- LEFT -->
+    <div class="left-panel">
+
+      <!-- SHEETS CARD -->
+      <div class="setup-card" id="sheetsCard">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <div>
+              <div class="ch-title">Google Sheets Sync</div>
+              <div class="ch-sub" id="sheetsSub">3 easy steps · no code needed</div>
+            </div>
+          </div>
+        </div>
+        <div class="setup-steps">
+          <div class="step">
+            <div class="step-num" id="s1">1</div>
+            <div>
+              <div class="step-title">Create a free SheetDB account</div>
+              <div class="step-desc">SheetDB turns any Google Sheet into a live API in 30 seconds — no code, no scripts.</div>
+              <a class="step-link" href="https://sheetdb.io" target="_blank" rel="noopener">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Open sheetdb.io (free)
+              </a>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" id="s2">2</div>
+            <div>
+              <div class="step-title">Connect your Google Sheet</div>
+              <div class="step-desc">In SheetDB: <b>Create new API</b> → paste your Google Sheet URL → hit <b>Create</b>. Done.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" id="s3">3</div>
+            <div>
+              <div class="step-title">Paste your API URL here</div>
+              <div class="step-desc">Copy the URL from SheetDB (starts with <code style="font-family:var(--mono);font-size:11px;background:var(--surface-3);padding:1px 5px;border-radius:3px">https://sheetdb.io/api/v1/</code>)</div>
+              <div class="step-input-row">
+                <input class="step-input" type="text" id="sheetdbUrl" placeholder="https://sheetdb.io/api/v1/..." oninput="onUrlInput()">
+                <button class="connect-btn" id="connectBtn" onclick="connectSheets()" disabled>Connect</button>
+              </div>
+              <div class="connected-badge" id="connBadge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                Connected! Orders will auto-sync.
+                <button class="disc-btn" onclick="disconnectSheets()">Disconnect</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDER FORM -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon amber">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 8a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2M5 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <div>
+              <div class="ch-title">New Dispatch Order</div>
+              <div class="ch-sub" id="formId">Next: —</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form id="orderForm" autocomplete="off">
+            <div class="sec-label">Sender</div>
+            <div class="fg">
+              <label>Sender Name</label>
+              <input type="text" id="senderName" placeholder="Enter Your Name" required>
+            </div>
+            <div class="sec-label">Customer Details</div>
+            <div class="fg">
+              <label>Customer Name</label>
+              <input type="text" id="customerName" placeholder="Recipient's full name" required>
+            </div>
+            <div class="row">
+              <div class="fg"><label>Primary Number</label><input type="tel" id="number" placeholder="10-digit mobile" oninput="this.value=this.value.replace(/\D/g,'')" maxlength="10" required></div>
+              <div class="fg"><label>Alternate Number</label><input type="tel" id="altNumber" placeholder="Optional" oninput="this.value=this.value.replace(/\D/g,'')" maxlength="10"></div>
+            </div>
+            <div class="fg"><label>Full Address</label><input type="text" id="address" placeholder="House no, Street, Landmark" required></div>
+            <div class="row-3">
+              <div class="fg"><label>City</label><input type="text" id="city" required></div>
+              <div class="fg"><label>State</label><input type="text" id="state" required></div>
+              <div class="fg"><label>Pincode</label><input type="text" id="pincode" maxlength="6" placeholder="6-digit" oninput="this.value=this.value.replace(/\D/g,'')" required></div>
+            </div>
+            <div class="sec-label">Payment</div>
+            <div class="row">
+              <div class="fg"><label>Base Amount (₹)</label><input type="number" id="amount" min="0" placeholder="0" required></div>
+              <div class="fg">
+                <label>Discount</label>
+                <select id="discount">
+                  <option value="0">No discount</option>
+                  <option value="5">5% off</option>
+                  <option value="10">10% off</option>
+                </select>
+              </div>
+            </div>
+            <div class="fg"><label>Token / Advance (₹)</label><input type="number" id="token" min="0" placeholder="0"></div>
+            <div class="summary-box">
+              <div class="s-row"><span>Base Amount</span><span class="sv">₹<span id="sBase">0.00</span></span></div>
+              <div class="s-row" id="discRow" style="display:none"><span>Discount (<span id="sDiscPct">0</span>%)</span><span class="sv" style="color:#f87171">−₹<span id="sDisc">0.00</span></span></div>
+              <div class="s-row"><span>After Discount</span><span class="sv">₹<span id="sTotal">0.00</span></span></div>
+              <div class="s-row" id="tokRow" style="display:none"><span>Token Paid</span><span class="sv" style="color:#6ee7b7">−₹<span id="sTok">0.00</span></span></div>
+              <hr class="s-div">
+              <div class="cod-row">
+                <span class="cod-lbl">COD Pending</span>
+                <span class="cod-val">₹<span id="sCOD">0.00</span></span>
+              </div>
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              Save & Generate Order
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div>
+              <div class="ch-title">Order History</div>
+              <div class="ch-sub" id="orderCount">0 orders</div>
+            </div>
+          </div>
+          <button class="clear-all" id="clearAllBtn" style="display:none" onclick="clearAll()">Delete All</button>
+        </div>
+        <div class="card-body">
+          <div class="toolbar">
+            <div class="search-wrap">
+              <svg class="s-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input class="search-inp" type="text" id="searchInput" placeholder="Search by name, city, order ID…" oninput="renderOrders()">
+            </div>
+            <select class="filter-sel" id="statusFilter" onchange="renderOrders()">
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="dispatched">Dispatched</option>
+              <option value="delivered">Delivered</option>
+            </select>
+          </div>
+          <div id="ordersContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© 2026 <strong>HQX Codes©</strong> — Secure Dispatch System &nbsp;·&nbsp; <span style="color:var(--text-4)">All data stored locally on your device</span></footer>
+</div>
+
+<!-- SLIP MODAL -->
+<div class="modal-bg" id="slipModal">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal()">✕</button>
+    <div class="modal-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Dispatch Slip
+    </div>
+    <div class="slip" id="slipContent"></div>
+    <div class="modal-acts">
+      <button class="modal-btn mb-primary" onclick="window.print()">🖨 Print</button>
+      <button class="modal-btn mb-sec" onclick="copySlip()">📋 Copy</button>
+      <button class="modal-btn mb-sec" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── GATE ──────────────────────────────────────────────────
+const CORRECT_PW = 'HQX2026';
+const MAX_ATTEMPTS = 5;
+const LOCK_SECS = 30;
+let attempts = 0;
+let locked = false;
+let lockTimer = null;
+
+function tryLogin() {
+  if (locked) return;
+  const val = document.getElementById('pwInput').value;
+  const inp = document.getElementById('pwInput');
+  const err = document.getElementById('gateError');
+  const errMsg = document.getElementById('gateErrorMsg');
+  const attTxt = document.getElementById('attemptsText');
+
+  if (val === CORRECT_PW) {
+    document.getElementById('gate').style.transition = 'opacity 0.5s ease';
+    document.getElementById('gate').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+    }, 500);
+    return;
+  }
+
+  attempts++;
+  inp.className = 'gate-input wrong';
+  setTimeout(() => { inp.className = 'gate-input'; }, 500);
+  inp.value = '';
+
+  const left = MAX_ATTEMPTS - attempts;
+
+  if (attempts >= MAX_ATTEMPTS) {
+    // Lock the gate
+    locked = true;
+    document.getElementById('loginForm').style.display = 'none';
+    const lv = document.getElementById('lockedView');
+    lv.className = 'gate-locked show';
+    let secs = LOCK_SECS;
+    const timerEl = document.getElementById('lockTimer');
+    timerEl.textContent = `0:${String(secs).padStart(2,'0')}`;
+    lockTimer = setInterval(() => {
+      secs--;
+      timerEl.textContent = `0:${String(secs).padStart(2,'0')}`;
+      if (secs <= 0) {
+        clearInterval(lockTimer);
+        locked = false;
+        attempts = 0;
+        lv.className = 'gate-locked';
+        document.getElementById('loginForm').style.display = 'block';
+        err.className = 'gate-error';
+        attTxt.textContent = '';
+      }
+    }, 1000);
+  } else {
+    err.className = 'gate-error show';
+    errMsg.textContent = left === 1
+      ? '⚠ Last attempt before temporary lock.'
+      : `Incorrect password. ${left} attempt${left>1?'s':''} remaining.`;
+    attTxt.textContent = '';
+  }
+}
+
+let eyeVisible = false;
+function toggleEye() {
+  eyeVisible = !eyeVisible;
+  const inp = document.getElementById('pwInput');
+  inp.type = eyeVisible ? 'text' : 'password';
+  inp.style.letterSpacing = eyeVisible ? '1px' : '3px';
+  document.getElementById('eyeIcon').innerHTML = eyeVisible
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+
+// ── STATE ─────────────────────────────────────────────────
+let orders = [];
+let sheetdbUrl = '';
+
+function loadState() {
+  orders = JSON.parse(localStorage.getItem('hqx_orders_v2') || '[]');
+  sheetdbUrl = localStorage.getItem('hqx_sheetdb_url') || '';
+  if (sheetdbUrl) {
+    document.getElementById('sheetdbUrl').value = sheetdbUrl;
+    setConnected(true);
+  }
+  updateFormId();
+}
+
+function saveOrders() { localStorage.setItem('hqx_orders_v2', JSON.stringify(orders)); }
+
+// ── ORDER ID ──────────────────────────────────────────────
+function genId() {
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  return `Order-${dd}${mm}-${String(orders.length+1).padStart(3,'0')}`;
+}
+function updateFormId() {
+  document.getElementById('formId').textContent = `Next: ${genId()}`;
+}
+
+// ── CALC ──────────────────────────────────────────────────
+function calc() {
+  const base = parseFloat(document.getElementById('amount').value)||0;
+  const dp = parseFloat(document.getElementById('discount').value)||0;
+  const tok = parseFloat(document.getElementById('token').value)||0;
+  const disc = base*(dp/100);
+  const total = Math.max(0, base-disc);
+  const cod = Math.max(0, total-tok);
+  document.getElementById('sBase').textContent = base.toFixed(2);
+  document.getElementById('sTotal').textContent = total.toFixed(2);
+  document.getElementById('sCOD').textContent = cod.toFixed(2);
+  const dr = document.getElementById('discRow');
+  if(dp>0){ dr.style.display='flex'; document.getElementById('sDiscPct').textContent=dp; document.getElementById('sDisc').textContent=disc.toFixed(2); } else { dr.style.display='none'; }
+  const tr = document.getElementById('tokRow');
+  if(tok>0){ tr.style.display='flex'; document.getElementById('sTok').textContent=tok.toFixed(2); } else { tr.style.display='none'; }
+  return { base:base.toFixed(2), discPct:dp, total:total.toFixed(2), token:tok.toFixed(2), cod:cod.toFixed(2) };
+}
+['amount','token'].forEach(id => document.getElementById(id).addEventListener('input',calc));
+document.getElementById('discount').addEventListener('change',calc);
+
+// ── FORM SUBMIT ───────────────────────────────────────────
+document.getElementById('orderForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.style.opacity='0.7'; btn.textContent='Saving…';
+  const p = calc();
+  const now = new Date();
+  const order = {
+    id: genId(),
+    date: now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) + ', ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}),
+    timestamp: now.toISOString(),
+    status: 'pending', synced: false,
+    sender: document.getElementById('senderName').value.trim(),
+    customer: document.getElementById('customerName').value.trim(),
+    number: document.getElementById('number').value.trim(),
+    altNumber: document.getElementById('altNumber').value.trim(),
+    address: document.getElementById('address').value.trim(),
+    city: document.getElementById('city').value.trim(),
+    state: document.getElementById('state').value.trim(),
+    pincode: document.getElementById('pincode').value.trim(),
+    baseAmount: p.base, discount: p.discPct,
+    total: p.total, token: p.token, cod: p.cod
+  };
+  orders.unshift(order);
+  saveOrders();
+  if(sheetdbUrl) await syncToSheets(order);
+  renderOrders(); updateStats(); updateFormId();
+  this.reset(); calc();
+  showToast(`Order ${order.id} saved!`, 'success');
+  btn.style.opacity='1';
+  btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Save & Generate Order';
+});
+
+// ── SHEETDB ───────────────────────────────────────────────
+function onUrlInput() {
+  const val = document.getElementById('sheetdbUrl').value.trim();
+  const btn = document.getElementById('connectBtn');
+  const inp = document.getElementById('sheetdbUrl');
+  const ok = val.startsWith('https://sheetdb.io/api/');
+  btn.disabled = !ok;
+  inp.className = 'step-input' + (val.length>10 ? (ok?' valid':' invalid') : '');
+}
+
+async function connectSheets() {
+  const url = document.getElementById('sheetdbUrl').value.trim();
+  if(!url) return;
+  const btn = document.getElementById('connectBtn');
+  btn.textContent='Testing…'; btn.disabled=true;
+  try {
+    const r = await fetch(url+'?limit=1');
+    if(!r.ok) throw new Error();
+    sheetdbUrl = url;
+    localStorage.setItem('hqx_sheetdb_url', sheetdbUrl);
+    setConnected(true);
+    showToast('Connected to Google Sheets!','success');
+  } catch {
+    showToast('Connection failed. Check the URL.','error');
+    btn.textContent='Connect'; btn.disabled=false;
+  }
+}
+
+function disconnectSheets() {
+  if(!confirm('Disconnect Sheets? Orders will still save locally.')) return;
+  sheetdbUrl=''; localStorage.removeItem('hqx_sheetdb_url');
+  document.getElementById('sheetdbUrl').value='';
+  document.getElementById('sheetdbUrl').className='step-input';
+  document.getElementById('connectBtn').disabled=true;
+  setConnected(false);
+  showToast('Disconnected','warn');
+}
+
+function setConnected(on) {
+  const pill = document.getElementById('sheetsPill');
+  const pillTxt = document.getElementById('pillTxt');
+  const card = document.getElementById('sheetsCard');
+  const sub = document.getElementById('sheetsSub');
+  const badge = document.getElementById('connBadge');
+  const btn = document.getElementById('connectBtn');
+  const nums = ['s1','s2','s3'].map(id=>document.getElementById(id));
+  if(on){
+    pill.className='sheets-pill connected'; pillTxt.textContent='Sheets: Live';
+    card.className='setup-card connected'; sub.textContent='✓ Sync active';
+    badge.className='connected-badge show'; btn.textContent='Connected ✓'; btn.disabled=true;
+    nums.forEach((n,i)=>{ n.className='step-num done'; n.textContent='✓'; });
+  } else {
+    pill.className='sheets-pill'; pillTxt.textContent='Sheets: Off';
+    card.className='setup-card'; sub.textContent='3 easy steps · no code needed';
+    badge.className='connected-badge'; btn.textContent='Connect'; btn.disabled=true;
+    nums.forEach((n,i)=>{ n.className='step-num'; n.textContent=i+1; });
+  }
+}
+
+async function syncToSheets(order) {
+  if(!sheetdbUrl) return;
+  const pill = document.getElementById('sheetsPill');
+  pill.className='sheets-pill syncing'; document.getElementById('pillTxt').textContent='Syncing…';
+  try {
+    const r = await fetch(sheetdbUrl, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({ data:[{
+        'Order ID':order.id,'Date':order.date,'Status':order.status,
+        'Sender':order.sender,'Customer':order.customer,'Phone':order.number,
+        'Alt Phone':order.altNumber,'Address':order.address,'City':order.city,
+        'State':order.state,'Pincode':order.pincode,'Base Amount':order.baseAmount,
+        'Discount %':order.discount,'Total':order.total,'Advance':order.token,'COD':order.cod
+      }]})
+    });
+    if(!r.ok) throw new Error();
+    order.synced=true; saveOrders(); setConnected(true);
+    showToast('Synced to Sheets ✓','info');
+  } catch {
+    pill.className='sheets-pill error'; document.getElementById('pillTxt').textContent='Sync failed';
+    setTimeout(()=>setConnected(true), 3000);
+    showToast('Sheets sync failed — saved locally','warn');
+  }
+}
+
+// ── RENDER ORDERS ─────────────────────────────────────────
+function renderOrders() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const sf = document.getElementById('statusFilter').value;
+  const filtered = orders.filter(o=>{
+    const mq = !q||[o.id,o.customer,o.city,o.number,o.sender].some(v=>v&&v.toLowerCase().includes(q));
+    return mq && (sf==='all'||o.status===sf);
+  });
+  const c = document.getElementById('ordersContainer');
+  document.getElementById('orderCount').textContent = `${orders.length} order${orders.length!==1?'s':''}`;
+  document.getElementById('clearAllBtn').style.display = orders.length?'block':'none';
+
+  if(!filtered.length){
+    c.innerHTML=`<div class="empty">
+      <div class="empty-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${orders.length?'#94a3b8':'#cbd5e1'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${orders.length?'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>':'<path d="M5 8h14M5 8a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2M5 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/>'}</svg>
+      </div>
+      <h3>${orders.length?'No results found':'No orders yet'}</h3>
+      <p>${orders.length?'Try a different search or filter.':'Create your first dispatch order to get started.'}</p>
+    </div>`;
+    return;
+  }
+
+  c.innerHTML='';
+  filtered.forEach(o=>{
+    const div=document.createElement('div'); div.className='oc';
+    const wa=encodeURIComponent(`📦 *NEW DISPATCH — ${o.id}*\n\n*Sender:* ${o.sender}\n\n👤 *Customer Info:*\nName: ${o.customer}\nPhone: ${o.number}${o.altNumber?' / '+o.altNumber:''}\nAddress: ${o.address}\n${o.city}, ${o.state} – ${o.pincode}\n\n💳 *Payment:*\nTotal: ₹${o.total}\nAdvance: ₹${o.token}\n*COD Amount: ₹${o.cod}*`);
+    const sdClass = sheetdbUrl?(o.synced?'sync-dot synced':'sync-dot failed'):'sync-dot';
+    const sdTitle = sheetdbUrl?(o.synced?'Synced to Sheets':'Not synced yet'):'Sheets not connected';
+    div.innerHTML=`
+      <div class="oc-head">
+        <span class="oc-id">${o.id}</span>
+        <div class="oc-meta">
+          <span class="${sdClass}" title="${sdTitle}"></span>
+          <span class="oc-date">${o.date}</span>
+          <span class="sbadge ${o.status}" onclick="cycleStatus('${o.id}')" title="Click to advance status">${o.status}</span>
+        </div>
+      </div>
+      <div class="oc-body">
+        <div class="of"><span class="of-l">Customer</span><span class="of-v">${o.customer}</span></div>
+        <div class="of"><span class="of-l">Phone</span><span class="of-v">${o.number}${o.altNumber?' / '+o.altNumber:''}</span></div>
+        <div class="of full"><span class="of-l">Address</span><span class="of-v">${o.address}, ${o.city}, ${o.state} – ${o.pincode}</span></div>
+        <div class="of"><span class="of-l">Sender</span><span class="of-v">${o.sender}</span></div>
+        <div class="of"><span class="of-l">Total / Advance</span><span class="of-v">₹${o.total} / ₹${o.token}</span></div>
+      </div>
+      <div class="oc-foot">
+        <div class="cod-tag"><span class="cl">COD</span><span class="cv">₹${o.cod}</span></div>
+        <div class="oc-actions">
+          <button class="abtn a-print" onclick="openSlip('${o.id}')" title="Print slip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Slip
+          </button>
+          <a href="https://wa.me/?text=${wa}" target="_blank" class="abtn a-wa">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+            WhatsApp
+          </a>
+          <button class="abtn a-del" onclick="deleteOrder('${o.id}')">✕</button>
+        </div>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+
+// ── ACTIONS ───────────────────────────────────────────────
+function cycleStatus(id){
+  const o=orders.find(o=>o.id===id); if(!o) return;
+  const s=['pending','dispatched','delivered'];
+  o.status=s[(s.indexOf(o.status)+1)%s.length];
+  saveOrders(); renderOrders(); updateStats();
+  showToast(`${id} → ${o.status}`,'info');
+}
+function deleteOrder(id){
+  if(!confirm(`Delete order ${id}?`)) return;
+  orders=orders.filter(o=>o.id!==id);
+  saveOrders(); renderOrders(); updateStats(); updateFormId();
+  showToast(`Order ${id} deleted`,'warn');
+}
+function clearAll(){
+  if(!confirm('Delete ALL orders? This cannot be undone.')) return;
+  orders=[]; saveOrders(); renderOrders(); updateStats(); updateFormId();
+  showToast('All orders cleared','warn');
+}
+
+// ── SLIP ──────────────────────────────────────────────────
+function openSlip(id){
+  const o=orders.find(o=>o.id===id); if(!o) return;
+  document.getElementById('slipContent').textContent=
+`╔══════════════════════════════════╗
+  ORDER DISPATCH — ${o.id}
+╚══════════════════════════════════╝
+
+DATE    : ${o.date}
+STATUS  : ${o.status.toUpperCase()}
+SENDER  : ${o.sender}
+
+─── DELIVER TO ─────────────────────
+NAME    : ${o.customer}
+PHONE   : ${o.number}${o.altNumber?'\nALT     : '+o.altNumber:''}
+ADDRESS : ${o.address}
+          ${o.city}, ${o.state}
+PINCODE : ${o.pincode}
+
+─── PAYMENT ────────────────────────
+TOTAL   : ₹${o.total}
+ADVANCE : ₹${o.token}
+───────────────────────────────────
+COD DUE : ₹${o.cod}
+═══════════════════════════════════`;
+  document.getElementById('slipModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('slipModal').classList.remove('open'); }
+function copySlip(){ navigator.clipboard.writeText(document.getElementById('slipContent').textContent); showToast('Slip copied!','success'); }
+document.getElementById('slipModal').addEventListener('click',e=>{ if(e.target.id==='slipModal') closeModal(); });
+
+// ── STATS ─────────────────────────────────────────────────
+function updateStats(){
+  document.getElementById('statTotal').textContent=orders.length;
+  document.getElementById('statPending').textContent=orders.filter(o=>o.status==='pending').length;
+  const t=orders.reduce((s,o)=>s+parseFloat(o.cod),0);
+  document.getElementById('statCOD').textContent='₹'+(t>=1000?(t/1000).toFixed(1)+'k':t.toFixed(0));
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg,type='info'){
+  const icons={success:'✓',error:'✕',info:'↗',warn:'⚠'};
+  const w=document.getElementById('toastWrap');
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.textContent=`${icons[type]||''} ${msg}`;
+  w.appendChild(t); setTimeout(()=>t.remove(),3100);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+loadState(); renderOrders(); updateStats(); calc();
+</script>
+</body>
+</html>
